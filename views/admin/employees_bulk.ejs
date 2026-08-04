@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>직원 일괄 등록 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin">대시보드</a>
+      <a href="/admin/employees" class="active">직원관리</a>
+      <a href="/admin/requests">연차승인</a>
+      <a href="/admin/promotion">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>직원 일괄 등록</h2>
+      <p class="muted">
+        엑셀에서 <b>이름 / 생년월일(8자리) / 입사일(YYYY-MM-DD) / 부서 / 권한</b> 순서로 열을 만들고,
+        해당 범위를 그대로 드래그해서 복사(Ctrl+C)한 다음 아래 칸에 붙여넣기(Ctrl+V) 하세요.
+        부서와 권한은 비워둬도 됩니다 (권한을 비우면 '직원'으로 등록됩니다).
+      </p>
+      <p class="muted">
+        예시 (탭으로 구분된 상태로 붙여넣으면 됩니다):<br>
+        <code>홍길동&nbsp;&nbsp;&nbsp;19900101&nbsp;&nbsp;&nbsp;2022-03-01&nbsp;&nbsp;&nbsp;영업팀<br>
+        김철수&nbsp;&nbsp;&nbsp;19920202&nbsp;&nbsp;&nbsp;2021-05-01&nbsp;&nbsp;&nbsp;총무팀&nbsp;&nbsp;&nbsp;관리자</code>
+      </p>
+
+      <form method="POST" action="/admin/employees/bulk">
+        <div class="field">
+          <textarea name="bulk_text" rows="12" placeholder="여기에 엑셀에서 복사한 내용을 붙여넣으세요" required></textarea>
+        </div>
+        <button type="submit">일괄 등록</button>
+        <a href="/admin/employees" class="btn btn-outline">취소</a>
+      </form>
+    </div>
+
+    <% if (result) { %>
+    <div class="card">
+      <h2>등록 결과</h2>
+      <p class="muted"><%= result.success.length %>명 등록 성공 / <%= result.failed.length %>명 실패</p>
+
+      <% if (result.success.length > 0) { %>
+        <div class="alert alert-success">
+          성공: <%= result.success.join(', ') %>
+        </div>
+      <% } %>
+
+      <% if (result.failed.length > 0) { %>
+        <table>
+          <thead><tr><th>줄</th><th>입력 내용</th><th>실패 사유</th></tr></thead>
+          <tbody>
+            <% result.failed.forEach(f => { %>
+            <tr>
+              <td><%= f.line %></td>
+              <td><%= f.raw %></td>
+              <td class="alert-error" style="padding:4px 8px;display:inline-block;"><%= f.reason %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+</body>
+</html>

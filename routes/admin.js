@@ -40,6 +40,48 @@ router.post('/employees/:id/deactivate', requireAdmin, (req, res) => {
   res.redirect('/admin/employees?success=' + encodeURIComponent('퇴사 처리되었습니다.'));
 });
 
+// 일괄 등록: 엑셀에서 복사한 여러 줄(탭 또는 콤마 구분)을 한 번에 등록
+router.get('/employees/bulk', requireAdmin, (req, res) => {
+  res.render('admin/employees_bulk', { emp: req.session.employee, result: null });
+});
+
+router.post('/employees/bulk', requireAdmin, (req, res) => {
+  const raw = req.body.bulk_text || '';
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  const results = { success: [], failed: [] };
+  const touchedNames = new Set();
+
+  lines.forEach((line, idx) => {
+    const cols = line.split(/\t|,/).map(c => c.trim());
+    const [name, birthRaw, hireRaw, department, roleRaw] = cols;
+    const birthDigits = (birthRaw || '').replace(/\D/g, '');
+    const hireDate = (hireRaw || '').replace(/[.\/]/g, '-').trim();
+    const hireValid = /^\d{4}-\d{1,2}-\d{1,2}$/.test(hireDate);
+    const role = (roleRaw || '').trim() === '관리자' || (roleRaw || '').trim() === 'admin' ? 'admin' : 'employee';
+
+    if (!name || birthDigits.length !== 8 || !hireValid) {
+      results.failed.push({ line: idx + 1, raw: line, reason: '이름/생년월일(8자리)/입사일(YYYY-MM-DD) 형식을 확인해주세요.' });
+      return;
+    }
+
+    try {
+      db.prepare(
+        `INSERT INTO employees (name, display_name, birth_date, hire_date, department, role)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      ).run(name, name, birthDigits, hireDate, department || '', role);
+      touchedNames.add(name);
+      results.success.push(name);
+    } catch (e) {
+      results.failed.push({ line: idx + 1, raw: line, reason: '등록 중 오류: ' + e.message });
+    }
+  });
+
+  touchedNames.forEach(n => recalcDisplayNames(n));
+
+  res.render('admin/employees_bulk', { emp: req.session.employee, result: results });
+});
+
 // 직원 정보 수정 (이름/생년월일/입사일/부서/권한 변경, 관리자 지정 포함)
 router.get('/employees/:id/edit', requireAdmin, (req, res) => {
   const employee = db.prepare(`SELECT * FROM employees WHERE id = ?`).get(req.params.id);
