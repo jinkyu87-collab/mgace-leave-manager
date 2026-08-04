@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>내 연차 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리</div>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+    <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+    <div class="card">
+      <h2>연차 현황 (<%= balance.yearStart %> ~ <%= balance.yearEnd %>)</h2>
+      <div class="grid">
+        <div class="stat"><div class="num"><%= balance.entitlement %></div><div class="label">발생 연차</div></div>
+        <div class="stat"><div class="num"><%= balance.used %></div><div class="label">사용</div></div>
+        <div class="stat"><div class="num"><%= balance.pending %></div><div class="label">승인 대기</div></div>
+        <div class="stat"><div class="num" style="color:var(--success)"><%= balance.remaining %></div><div class="label">잔여</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>연차 신청</h2>
+      <form method="POST" action="/request">
+        <div class="row">
+          <div class="field">
+            <label>시작일</label>
+            <input type="date" name="start_date" required>
+          </div>
+          <div class="field">
+            <label>종료일</label>
+            <input type="date" name="end_date" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>사유 (선택)</label>
+          <textarea name="reason" rows="2" placeholder="예: 개인 사정"></textarea>
+        </div>
+        <button type="submit">신청하기</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>신청 내역</h2>
+      <table>
+        <thead>
+          <tr><th>기간</th><th>일수</th><th>사유</th><th>상태</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% requests.forEach(r => { %>
+          <tr>
+            <td><%= r.start_date %> ~ <%= r.end_date %></td>
+            <td><%= r.days %>일</td>
+            <td><%= r.reason || '-' %></td>
+            <td><span class="badge badge-<%= r.status %>">
+              <%= { pending: '대기중', approved: '승인', rejected: '반려', cancelled: '취소됨' }[r.status] %>
+            </span></td>
+            <td>
+              <% if (r.status === 'pending') { %>
+              <form method="POST" action="/request/<%= r.id %>/cancel" class="inline">
+                <button type="submit" class="btn-sm btn-danger">취소</button>
+              </form>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (requests.length === 0) { %>
+          <tr><td colspan="5" class="muted">신청 내역이 없습니다.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

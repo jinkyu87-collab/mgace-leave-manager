@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>직원관리 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin">대시보드</a>
+      <a href="/admin/employees" class="active">직원관리</a>
+      <a href="/admin/requests">연차승인</a>
+      <a href="/admin/promotion">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+    <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+    <div class="card">
+      <h2>직원 등록</h2>
+      <form method="POST" action="/admin/employees">
+        <div class="row">
+          <div class="field">
+            <label>이름</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="field">
+            <label>생년월일 (8자리, 로그인용)</label>
+            <input type="text" name="birth_date" placeholder="19900101" maxlength="8" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>입사일</label>
+            <input type="date" name="hire_date" required>
+          </div>
+          <div class="field">
+            <label>부서 (선택)</label>
+            <input type="text" name="department">
+          </div>
+          <div class="field">
+            <label>권한</label>
+            <select name="role">
+              <option value="employee">직원</option>
+              <option value="admin">관리자</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit">등록</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>재직 인원 (<%= employees.length %>명)</h2>
+      <table>
+        <thead>
+          <tr><th>이름</th><th>부서</th><th>입사일</th><th>권한</th><th>잔여연차</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% employees.forEach(e => { %>
+          <tr>
+            <td><%= e.display_name %></td>
+            <td><%= e.department || '-' %></td>
+            <td><%= e.hire_date %></td>
+            <td><%= e.role === 'admin' ? '관리자' : '직원' %></td>
+            <td><%= e.balance.remaining %> / <%= e.balance.entitlement %>일</td>
+            <td>
+              <a href="/admin/employees/<%= e.id %>/edit" class="btn-sm btn-outline">정보수정</a>
+              <form method="POST" action="/admin/employees/<%= e.id %>/deactivate" class="inline"
+                onsubmit="return confirm('퇴사 처리하시겠습니까?');">
+                <button type="submit" class="btn-sm btn-danger">퇴사처리</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

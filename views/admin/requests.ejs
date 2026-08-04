@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>연차승인 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin">대시보드</a>
+      <a href="/admin/employees">직원관리</a>
+      <a href="/admin/requests" class="active">연차승인</a>
+      <a href="/admin/promotion">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>연차 신청 목록</h2>
+      <div style="margin-bottom:16px;">
+        <a href="/admin/requests?status=pending" class="btn <%= status==='pending' ? '' : 'btn-outline' %> btn-sm">대기중</a>
+        <a href="/admin/requests?status=approved" class="btn <%= status==='approved' ? '' : 'btn-outline' %> btn-sm">승인됨</a>
+        <a href="/admin/requests?status=rejected" class="btn <%= status==='rejected' ? '' : 'btn-outline' %> btn-sm">반려됨</a>
+      </div>
+      <table>
+        <thead>
+          <tr><th>이름</th><th>부서</th><th>기간</th><th>일수</th><th>사유</th><% if (status === 'pending') { %><th>처리</th><% } %></tr>
+        </thead>
+        <tbody>
+          <% requests.forEach(r => { %>
+          <tr>
+            <td><%= r.display_name %></td>
+            <td><%= r.department || '-' %></td>
+            <td><%= r.start_date %> ~ <%= r.end_date %></td>
+            <td><%= r.days %>일</td>
+            <td><%= r.reason || '-' %></td>
+            <% if (status === 'pending') { %>
+            <td>
+              <form method="POST" action="/admin/requests/<%= r.id %>/approve" class="inline">
+                <button type="submit" class="btn-sm">승인</button>
+              </form>
+              <form method="POST" action="/admin/requests/<%= r.id %>/reject" class="inline"
+                onsubmit="return this.reject_reason.value = prompt('반려 사유를 입력하세요') || '';">
+                <input type="hidden" name="reject_reason">
+                <button type="submit" class="btn-sm btn-danger">반려</button>
+              </form>
+            </td>
+            <% } %>
+          </tr>
+          <% }) %>
+          <% if (requests.length === 0) { %>
+          <tr><td colspan="6" class="muted">내역이 없습니다.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

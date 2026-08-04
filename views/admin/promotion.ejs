@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>연차촉진 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin">대시보드</a>
+      <a href="/admin/employees">직원관리</a>
+      <a href="/admin/requests">연차승인</a>
+      <a href="/admin/promotion" class="active">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>연차촉진 대상자 (오늘: <%= today %>)</h2>
+      <p class="muted">
+        사용기한 만료 6개월 전부터 대상자로 표시됩니다. 1차 촉구 발송 → 근로자 응답 기록 →
+        미응답 시 사용기한 2개월 전 2차(사용자 지정) 통보 순서로 진행하세요.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>이름</th><th>잔여연차</th><th>사용기한</th>
+            <th>1차 촉구기한</th><th>2차(지정) 기한</th><th>진행상태</th><th>처리</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% targets.forEach(t => { %>
+          <tr>
+            <td><%= t.employee.display_name %></td>
+            <td><%= t.balance.remaining %>일</td>
+            <td><%= t.yearEnd %></td>
+            <td><%= t.stage1Deadline %></td>
+            <td><%= t.stage2Deadline %></td>
+            <td>
+              <% if (!t.notice) { %>
+                <span class="badge badge-pending">미발송</span>
+              <% } else if (t.notice.stage === 1 && t.notice.status === 'sent') { %>
+                <span class="badge badge-pending">1차 발송됨 (<%= t.notice.sent_date %>)</span>
+              <% } else if (t.notice.stage === 1 && t.notice.status === 'responded') { %>
+                <span class="badge badge-approved">응답완료: <%= t.notice.employee_designated_dates %></span>
+              <% } else if (t.notice.stage === 2) { %>
+                <span class="badge badge-rejected">2차 지정통보 완료</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (!t.notice) { %>
+                <form method="POST" action="/admin/promotion/<%= t.employee.id %>/stage1" class="inline">
+                  <button type="submit" class="btn-sm">1차 촉구 발송</button>
+                </form>
+              <% } else if (t.notice.stage === 1 && t.notice.status === 'sent') { %>
+                <form method="POST" action="/admin/promotion/<%= t.notice.id %>/response" class="inline"
+                  onsubmit="return this.designated_dates.value = prompt('근로자가 지정한 사용 시기를 입력하세요 (예: 2026-09-01~2026-09-05)') || '';">
+                  <input type="hidden" name="designated_dates">
+                  <button type="submit" class="btn-sm btn-outline">근로자 응답 기록</button>
+                </form>
+                <% if (t.pastStage2) { %>
+                <form method="POST" action="/admin/promotion/<%= t.employee.id %>/stage2" class="inline"
+                  onsubmit="return this.designated_dates.value = prompt('회사가 지정하는 사용 시기를 입력하세요') || '';">
+                  <input type="hidden" name="designated_dates">
+                  <button type="submit" class="btn-sm btn-danger">2차 지정통보 발송</button>
+                </form>
+                <% } %>
+              <% } else { %>
+                <span class="muted">완료</span>
+              <% } %>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (targets.length === 0) { %>
+          <tr><td colspan="7" class="muted">현재 연차촉진 대상자가 없습니다.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

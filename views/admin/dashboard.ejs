@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>관리자 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin" class="active">대시보드</a>
+      <a href="/admin/employees">직원관리</a>
+      <a href="/admin/requests">연차승인</a>
+      <a href="/admin/promotion">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card stat">
+        <div class="num"><%= employeeCount %></div>
+        <div class="label">재직 인원</div>
+      </div>
+      <div class="card stat">
+        <div class="num"><%= pendingCount %></div>
+        <div class="label">승인 대기 신청</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>바로가기</h2>
+      <a href="/admin/employees" class="btn">직원 등록/관리</a>
+      &nbsp;
+      <a href="/admin/requests" class="btn btn-outline">연차 승인 처리</a>
+      &nbsp;
+      <a href="/admin/promotion" class="btn btn-outline">연차촉진 대상자 관리</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "mgace-leave-manager",
+  "version": "1.0.0",
+  "description": "MGACE 연차관리 시스템 - 신청/승인, 잔여연차, 연차촉진 관리",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^13.0.2",
+    "dayjs": "^1.11.21",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  }
+}
