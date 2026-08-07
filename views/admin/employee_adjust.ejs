@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>연차 조정 - MGACE 연차관리</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="brand">MGACE 연차관리 · 관리자</div>
+    <nav>
+      <a href="/admin">대시보드</a>
+      <a href="/admin/employees" class="active">직원관리</a>
+      <a href="/admin/requests">연차승인</a>
+      <a href="/admin/promotion">연차촉진</a>
+    </nav>
+    <div class="user">
+      <%= emp.display_name %>님
+      <form method="POST" action="/logout"><button class="btn-outline btn-sm" type="submit">로그아웃</button></form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2><%= employee.display_name %> 연차 조정</h2>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div class="grid">
+        <div class="stat"><div class="num"><%= balance.legalEntitlement %></div><div class="label">법정 발생 연차</div></div>
+        <div class="stat"><div class="num"><%= balance.adjustment %></div><div class="label">누적 조정값</div></div>
+        <div class="stat"><div class="num"><%= balance.used %></div><div class="label">사용</div></div>
+        <div class="stat"><div class="num" style="color:var(--success)"><%= balance.remaining %></div><div class="label">현재 잔여</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>연차 추가/차감</h2>
+      <p class="muted">
+        예: 이월연차를 더해주려면 <b>2</b>, 착오 등록된 연차를 빼려면 <b>-1</b> 처럼 입력하세요.
+        여기서 조정한 값은 "발생 연차"에 누적으로 반영되어 잔여 연차 계산에 즉시 사용됩니다.
+      </p>
+      <form method="POST" action="/admin/employees/<%= employee.id %>/adjust">
+        <div class="row">
+          <div class="field">
+            <label>조정 일수 (양수: 추가, 음수: 차감)</label>
+            <input type="number" step="0.5" name="amount" placeholder="예: 1 또는 -0.5" required>
+          </div>
+          <div class="field">
+            <label>사유</label>
+            <input type="text" name="reason" placeholder="예: 전년도 이월, 등록 오류 정정">
+          </div>
+        </div>
+        <button type="submit">조정 적용</button>
+        <a href="/admin/employees" class="btn btn-outline">목록으로</a>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>조정 이력</h2>
+      <table>
+        <thead><tr><th>일시</th><th>조정값</th><th>사유</th><th></th></tr></thead>
+        <tbody>
+          <% history.forEach(h => { %>
+          <tr>
+            <td><%= h.created_at %></td>
+            <td style="color: <%= h.amount > 0 ? 'var(--success)' : 'var(--danger)' %>;">
+              <%= h.amount > 0 ? '+' : '' %><%= h.amount %>일
+            </td>
+            <td><%= h.reason || '-' %></td>
+            <td>
+              <form method="POST" action="/admin/employees/<%= employee.id %>/adjust/<%= h.id %>/delete" class="inline"
+                onsubmit="return confirm('이 조정 내역을 삭제할까요?');">
+                <button type="submit" class="btn-sm btn-danger">삭제</button>
+              </form>
+            </td>
+          </tr>
+          <% }) %>
+          <% if (history.length === 0) { %>
+          <tr><td colspan="4" class="muted">조정 이력이 없습니다.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

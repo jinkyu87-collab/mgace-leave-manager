@@ -75,6 +75,7 @@
             <td><%= e.balance.remaining %> / <%= e.balance.entitlement %>일</td>
             <td>
               <a href="/admin/employees/<%= e.id %>/edit" class="btn-sm btn-outline">정보수정</a>
+              <a href="/admin/employees/<%= e.id %>/adjust" class="btn-sm btn-outline">연차조정</a>
               <form method="POST" action="/admin/employees/<%= e.id %>/deactivate" class="inline"
                 onsubmit="return confirm('퇴사 처리하시겠습니까?');">
                 <button type="submit" class="btn-sm btn-danger">퇴사처리</button>

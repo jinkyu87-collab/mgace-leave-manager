@@ -47,8 +47,29 @@ CREATE TABLE IF NOT EXISTS promotion_notices (
   FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
+CREATE TABLE IF NOT EXISTS leave_adjustments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  employee_id INTEGER NOT NULL,
+  amount REAL NOT NULL,             -- 양수: 추가 부여, 음수: 차감
+  reason TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  created_by INTEGER,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_leave_employee ON leave_requests(employee_id);
 CREATE INDEX IF NOT EXISTS idx_promo_employee ON promotion_notices(employee_id);
+CREATE INDEX IF NOT EXISTS idx_adjust_employee ON leave_adjustments(employee_id);
 `);
+
+// --- 마이그레이션: 기존 배포된 DB에 새 컬럼 추가 (이미 있으면 무시) ---
+function ensureColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+  if (!cols.includes(column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+ensureColumn('leave_requests', 'leave_type', `TEXT NOT NULL DEFAULT 'full'`); // full | half | quarter | hourly
+ensureColumn('leave_requests', 'detail', `TEXT`); // 반차(오전/오후), 시차 시간범위 등 부가정보
 
 module.exports = db;

@@ -31,16 +31,81 @@
     <div class="card">
       <h2>연차 신청</h2>
       <form method="POST" action="/request">
-        <div class="row">
-          <div class="field">
-            <label>시작일</label>
-            <input type="date" name="start_date" required>
-          </div>
-          <div class="field">
-            <label>종료일</label>
-            <input type="date" name="end_date" required>
+        <div class="field">
+          <label>신청 종류</label>
+          <select name="leave_type" id="leave_type" onchange="toggleLeaveFields()">
+            <option value="full">연차 (1일 단위)</option>
+            <option value="half">반차 (0.5일)</option>
+            <option value="quarter">반반차 (0.25일)</option>
+            <option value="hourly">시차 (시간 단위)</option>
+          </select>
+        </div>
+
+        <div id="fields-full" class="leave-fields">
+          <div class="row">
+            <div class="field">
+              <label>시작일</label>
+              <input type="date" name="start_date">
+            </div>
+            <div class="field">
+              <label>종료일</label>
+              <input type="date" name="end_date">
+            </div>
           </div>
         </div>
+
+        <div id="fields-half" class="leave-fields" style="display:none;">
+          <div class="row">
+            <div class="field">
+              <label>사용일</label>
+              <input type="date" name="half_date">
+            </div>
+            <div class="field">
+              <label>시간대</label>
+              <select name="half_period">
+                <option value="am">오전 반차</option>
+                <option value="pm">오후 반차</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="fields-quarter" class="leave-fields" style="display:none;">
+          <div class="row">
+            <div class="field">
+              <label>사용일</label>
+              <input type="date" name="quarter_date">
+            </div>
+            <div class="field">
+              <label>시간대</label>
+              <select name="quarter_period">
+                <option value="am1">오전 1반반차</option>
+                <option value="am2">오전 2반반차</option>
+                <option value="pm1">오후 1반반차</option>
+                <option value="pm2">오후 2반반차</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="fields-hourly" class="leave-fields" style="display:none;">
+          <div class="row">
+            <div class="field">
+              <label>사용일</label>
+              <input type="date" name="hourly_date">
+            </div>
+            <div class="field">
+              <label>시작 시간</label>
+              <input type="time" name="hourly_start">
+            </div>
+            <div class="field">
+              <label>종료 시간</label>
+              <input type="time" name="hourly_end">
+            </div>
+          </div>
+          <p class="muted">1일 = 8시간 기준으로 자동 환산됩니다.</p>
+        </div>
+
         <div class="field">
           <label>사유 (선택)</label>
           <textarea name="reason" rows="2" placeholder="예: 개인 사정"></textarea>
@@ -49,16 +114,27 @@
       </form>
     </div>
 
+    <script>
+      function toggleLeaveFields() {
+        const type = document.getElementById('leave_type').value;
+        ['full', 'half', 'quarter', 'hourly'].forEach(t => {
+          document.getElementById('fields-' + t).style.display = (t === type) ? 'block' : 'none';
+        });
+      }
+    </script>
+
     <div class="card">
       <h2>신청 내역</h2>
       <table>
         <thead>
-          <tr><th>기간</th><th>일수</th><th>사유</th><th>상태</th><th></th></tr>
+          <tr><th>종류</th><th>기간</th><th>일수</th><th>사유</th><th>상태</th><th></th></tr>
         </thead>
         <tbody>
+          <% const typeLabels = { full: '연차', half: '반차', quarter: '반반차', hourly: '시차' }; %>
           <% requests.forEach(r => { %>
           <tr>
-            <td><%= r.start_date %> ~ <%= r.end_date %></td>
+            <td><%= typeLabels[r.leave_type] || '연차' %><% if (r.detail) { %><br><span class="muted"><%= r.detail %></span><% } %></td>
+            <td><%= r.start_date === r.end_date ? r.start_date : r.start_date + ' ~ ' + r.end_date %></td>
             <td><%= r.days %>일</td>
             <td><%= r.reason || '-' %></td>
             <td><span class="badge badge-<%= r.status %>">
@@ -74,7 +150,7 @@
           </tr>
           <% }) %>
           <% if (requests.length === 0) { %>
-          <tr><td colspan="5" class="muted">신청 내역이 없습니다.</td></tr>
+          <tr><td colspan="6" class="muted">신청 내역이 없습니다.</td></tr>
           <% } %>
         </tbody>
       </table>

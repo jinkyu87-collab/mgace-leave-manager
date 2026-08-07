@@ -40,6 +40,42 @@ router.post('/employees/:id/deactivate', requireAdmin, (req, res) => {
   res.redirect('/admin/employees?success=' + encodeURIComponent('퇴사 처리되었습니다.'));
 });
 
+// 연차 수동 조정 (잔여/발생 연차 직접 수정)
+router.get('/employees/:id/adjust', requireAdmin, (req, res) => {
+  const employee = db.prepare(`SELECT * FROM employees WHERE id = ?`).get(req.params.id);
+  if (!employee) return res.redirect('/admin/employees?error=' + encodeURIComponent('직원을 찾을 수 없습니다.'));
+  const balance = getBalance(employee.id, employee.hire_date);
+  const history = db.prepare(
+    `SELECT * FROM leave_adjustments WHERE employee_id = ? ORDER BY created_at DESC`
+  ).all(employee.id);
+  res.render('admin/employee_adjust', { emp: req.session.employee, employee, balance, history, error: null });
+});
+
+router.post('/employees/:id/adjust', requireAdmin, (req, res) => {
+  const employee = db.prepare(`SELECT * FROM employees WHERE id = ?`).get(req.params.id);
+  if (!employee) return res.redirect('/admin/employees?error=' + encodeURIComponent('직원을 찾을 수 없습니다.'));
+
+  const amount = parseFloat(req.body.amount);
+  const reason = (req.body.reason || '').trim();
+
+  if (isNaN(amount) || amount === 0) {
+    const balance = getBalance(employee.id, employee.hire_date);
+    const history = db.prepare(`SELECT * FROM leave_adjustments WHERE employee_id = ? ORDER BY created_at DESC`).all(employee.id);
+    return res.render('admin/employee_adjust', { emp: req.session.employee, employee, balance, history, error: '조정할 일수를 입력해주세요 (예: 1, -0.5).' });
+  }
+
+  db.prepare(
+    `INSERT INTO leave_adjustments (employee_id, amount, reason, created_by) VALUES (?, ?, ?, ?)`
+  ).run(employee.id, amount, reason, req.session.employee.id);
+
+  res.redirect(`/admin/employees/${employee.id}/adjust`);
+});
+
+router.post('/employees/:id/adjust/:adjustId/delete', requireAdmin, (req, res) => {
+  db.prepare(`DELETE FROM leave_adjustments WHERE id = ? AND employee_id = ?`).run(req.params.adjustId, req.params.id);
+  res.redirect(`/admin/employees/${req.params.id}/adjust`);
+});
+
 // 일괄 등록: 엑셀에서 복사한 여러 줄(탭 또는 콤마 구분)을 한 번에 등록
 router.get('/employees/bulk', requireAdmin, (req, res) => {
   res.render('admin/employees_bulk', { emp: req.session.employee, result: null });
