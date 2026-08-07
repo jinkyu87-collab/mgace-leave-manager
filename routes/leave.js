@@ -58,13 +58,13 @@ router.post('/request', requireLogin, (req, res) => {
     detail = labels[period];
   } else if (type === 'hourly') {
     const date = req.body.hourly_date;
-    const from = req.body.hourly_start;
-    const to = req.body.hourly_end;
-    if (!date || !from || !to) return renderError(res, emp, '시차 사용일과 시작/종료 시간을 입력해주세요.');
-    const startT = dayjs(`${date}T${from}`);
-    const endT = dayjs(`${date}T${to}`);
-    const hours = endT.diff(startT, 'minute') / 60;
-    if (hours <= 0) return renderError(res, emp, '종료 시간은 시작 시간 이후여야 합니다.');
+    const startHour = parseInt(req.body.hourly_start_hour, 10);
+    const hours = parseInt(req.body.hourly_hours, 10);
+    if (!date || isNaN(startHour) || isNaN(hours) || hours < 1 || hours > 7) {
+      return renderError(res, emp, '시차 사용일, 시작 시각, 사용 시간을 선택해주세요 (1~7시간, 1시간 단위).');
+    }
+    const from = `${String(startHour).padStart(2, '0')}:00`;
+    const to = `${String(startHour + hours).padStart(2, '0')}:00`;
     start_date = end_date = date;
     days = Math.round((hours / 8) * 100) / 100; // 1일 = 8시간 기준 환산
     detail = `${from}~${to} (${hours}시간)`;

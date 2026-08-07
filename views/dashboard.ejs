@@ -95,15 +95,33 @@
               <input type="date" name="hourly_date">
             </div>
             <div class="field">
-              <label>시작 시간</label>
-              <input type="time" name="hourly_start">
+              <label>시작 시각</label>
+              <select name="hourly_start_hour">
+                <option value="9">09:00</option>
+                <option value="10">10:00</option>
+                <option value="11">11:00</option>
+                <option value="12">12:00</option>
+                <option value="13">13:00</option>
+                <option value="14">14:00</option>
+                <option value="15">15:00</option>
+                <option value="16">16:00</option>
+                <option value="17">17:00</option>
+              </select>
             </div>
             <div class="field">
-              <label>종료 시간</label>
-              <input type="time" name="hourly_end">
+              <label>사용 시간</label>
+              <select name="hourly_hours">
+                <option value="1">1시간</option>
+                <option value="2">2시간</option>
+                <option value="3">3시간</option>
+                <option value="4">4시간</option>
+                <option value="5">5시간</option>
+                <option value="6">6시간</option>
+                <option value="7">7시간</option>
+              </select>
             </div>
           </div>
-          <p class="muted">1일 = 8시간 기준으로 자동 환산됩니다.</p>
+          <p class="muted">1시간 단위로만 신청 가능하며, 1일 = 8시간 기준으로 자동 환산됩니다.</p>
         </div>
 
         <div class="field">
